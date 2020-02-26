@@ -1,0 +1,367 @@
+enum Role {
+  ADMIN
+  OFFICER
+  RUN_MASTER
+  RUN_LEADER
+  USER
+}
+
+enum AccountStatus {
+  ACTIVE
+  PAST_DUE
+  DELINQUENT
+  REMOVED
+  RESIGNED
+  INACTIVE
+  LIMITED
+  LOCKED
+}
+
+enum AccountType {
+  FULL
+  ASSOCIATE
+  EMERITUS
+  GUEST
+}
+
+enum Office {
+  PRESIDENT
+  VICE_PRESIDENT
+  SECRETARY
+  TREASURER
+}
+
+enum Title {
+  WEBMASTER
+  CHARTER_MEMBER
+}
+
+enum Poll {
+  ELECTION
+  RUN_SELECTION
+}
+
+enum TrailDifficulty {
+  UNKNOWN
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum MigrationStatus {
+  NEEDED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum RSVPStatus {
+  NONE
+  CANT_GO
+  GOING
+  MAYBE
+}
+
+enum TrailCondition {
+  CLEAR
+  MINOR_ISSUES
+  MAJOR_ISSUES
+  CLOSED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  UNDISCLOSED
+}
+
+enum OutfitLevel {
+  MODIFIED
+  STOCK
+}
+
+enum ActivityMessageCode {
+  EVENT_ATTENDED
+  RUN_LEAD
+  EVENT_REVIEW_SUBMITTED
+  RUN_REPORT_SUBMITTED
+  GALLERY_PHOTO_SUBMITTED
+  GALLERY_PHOTOS_SUBMITTED
+  PROFILE_PHOTO_SUBMITTED
+  RIGBOOK_PHOTO_SUBMITTED
+  # COMMENTED
+  MEMBERSHIP_GRANTED
+}
+
+enum MembershipMessageCode {
+  ACCOUNT_CREATED
+  ACCOUNT_UNLOCKED
+  ACCOUNT_CHANGED    
+  ACCOUNT_REJECTED
+  DUES_PAID
+  OFFICE_ADDED
+  OFFICE_REMOVED
+  TITLE_ADDED
+  TITLE_REMOVED
+  MEMBERSHIP_ELIGIBLE
+  GUEST_RESTRICTED
+}
+
+enum EventType {
+  RUN
+  COLLECTION
+  FUNDRAISING
+  MEETING
+  CLINIC
+  SOCIAL
+}
+
+scalar DateTime
+
+type User {
+  id: ID! @unique @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  joined: DateTime
+  lastLogin: DateTime
+  firstName: String!
+  lastName: String!
+  email: String! @unique
+  gender: Gender
+  birthdate: DateTime
+  username: String! @unique
+  password: String!
+  resetToken: String
+  resetTokenExpiry: Float
+  contactInfo: ContactInfo @relation(name: "UserContactInfo")
+  preferences: Preference @relation(name: "UserPreferences")
+  userMeta: UserMeta @relation(name: "UserMeta")
+  avatar: CloudinaryImage
+  isCharterMember: Boolean @default(value: false)
+  rig: RigImage
+  vehicle: Vehicle 
+  title: Title
+  role: Role! @default(value: USER)
+  accountStatus: AccountStatus! @default(value: LOCKED)
+  accountType: AccountType! @default(value: GUEST)
+  office: Office @unique
+  candidateFor: [Ballot] @relation(name: "CandidateUser")
+  votesReceived: [Vote] @relation(name: "VotesRecdUser")
+  votedFor: [Vote] @relation(name: "VotedUser")
+  comfortLevel: String
+  activityLog: [ActivityLogItem] @relation(name: "LogItemActivity")
+  membershipLog: [MembershipLogItem] @relation(name: "LogItemMember")
+  membershipLogContributions: [MembershipLogItem]
+    @relation(name: "LogItemLogger")
+  eventsCreated: [Event] @relation(name: "EventCreator")
+  eventsRSVPd: [RSVP] @relation(name: "UserRSVP")
+  eventsHosted: [Event] @relation(name: "EventHost")
+  trailsVisited: [Trail] @relation(name: "TrailVisitor")
+  bandaids: [Bandaid] @relation(name: "BandaidSubject")
+  runReportsLogged: [RunReport] @relation(name: "RunReporter")
+  #trailsFavorited: [Trail] 
+}
+
+type ContactInfo {
+  id: ID! @unique @id
+  createdAt: DateTime @createdAt
+  updatedAt: DateTime! @updatedAt
+  user: User @relation(link: TABLE, name: "UserContactInfo")
+  street: String
+  city: String
+  state: String
+  zip: String
+  phone: String!
+}
+
+type Preference {
+  id: ID! @unique @id
+  createdAt: DateTime @createdAt
+  updatedAt: DateTime! @updatedAt
+  user: User @relation(link: TABLE, name: "UserPreferences")
+  emergencyContactName: String
+  emergencyContactPhone: String
+  photoPermissions: Boolean
+  showPhoneNumber: Boolean
+}
+
+type UserMeta {
+  id: ID! @unique @id
+  createdAt: DateTime @createdAt
+  updatedAt: DateTime! @updatedAt
+  user: User @relation(link: TABLE, name: "UserMeta")
+  emailVerified: Boolean @default(value: false)
+  firstLoginComplete: Boolean @default(value: false)
+  accountSetupComplete: Boolean @default(value: false)
+  oldSitemigrationComplete: Boolean @default(value: false)
+}
+
+type Event {
+  id: ID! @unique @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  type: EventType!
+  title: String!
+  creator: User! @relation(name: "EventCreator")
+  description: String
+  featuredImage: CloudinaryImage
+  startTime: DateTime
+  endTime: DateTime
+  host: User @relation(name: "EventHost")
+  rsvps: [RSVP] @relation(name: "EventRSVP")
+  address: String
+  trailDifficulty: TrailDifficulty
+  trailNotes: String
+  rallyAddress: String
+  rallyTime: String
+  trail: Trail @relation(name: "EventTrail")
+  bandaids: [Bandaid] @relation(name: "EventBandaid")
+  runReports: [RunReport] @relation(name: "EventRunReport")
+  membersOnly: Boolean
+}
+
+type RSVP {
+  id: ID! @unique @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  member: User! @relation(name: "UserRSVP")
+  event: Event! @relation(name: "EventRSVP")
+  status: RSVPStatus! @default(value: NONE)
+}
+
+type Trail {
+  id: ID! @unique @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  slug: String! @unique
+  name: String
+  description: String
+  featuredImage: CloudinaryImage
+  trailheadCoords: String
+  address: String
+  avgDifficulty: TrailDifficulty #computed
+  avgRatings: Float #computed
+  currentConditions: String #computed
+  conditionsLastReported: DateTime #computed
+  favoriteCount: Int #computed
+  pastEvents: [Event] @relation(link: TABLE, name: "EventTrail")
+  visitors: [User] @relation(link: TABLE, name: "TrailVisitor")
+  runReports: [RunReport] @relation(link: TABLE, name: "TrailRunReport")
+}
+
+type RunReport {
+  id: ID! @unique @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  startTime: DateTime!
+  endTime: DateTime!
+  reportFiled: DateTime!
+  reporter: User! @relation(link: TABLE, name: "RunReporter")
+  title: String!
+  description: String
+  trail: Trail! @relation(name: "TrailRunReport")
+  event: Event @relation(name: "EventRunReport")
+  weather: String!
+  difficulty: TrailDifficulty!
+  rating: Float!
+  condition: Condition @relation(link: TABLE, name: "RunCondition")
+  favorite: Boolean
+}
+
+type Condition {
+  id: ID! @unique @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  report: RunReport! @relation(name: "RunCondition")
+  status: TrailCondition!
+  notes: String
+}
+
+type Bandaid {
+  id: ID! @unique @id
+  createdAt: DateTime @createdAt
+  updatedAt: DateTime! @updatedAt
+  event: Event @relation(name: "EventBandaid")
+  memberInvolved: User @relation(name: "BandaidSubject")
+  title: String
+  description: String
+}
+
+type Election {
+  id: ID! @unique @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  electionName: String!
+  startTime: DateTime
+  endTime: DateTime
+  races: [Ballot]
+}
+
+type Ballot {
+  id: ID! @unique @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  title: String!
+  desc: String
+  candidates: [User] @relation(name: "CandidateUser")
+  votes: [Vote] @relation(name: "BallotVote")
+}
+
+type Vote {
+  id: ID! @unique @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  ballot: Ballot! @relation(name: "BallotVote")
+  candidate: User @relation(name: "VotesRecdUser")
+  voter: User! @relation(name: "VotedUser")
+}
+
+type Vehicle {
+  id: ID! @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  year: Int!
+  make: String!
+  model: String!
+  name: String
+  trim: String
+  image: CloudinaryImage
+  outfitLevel: OutfitLevel
+  mods: [String] @scalarList(strategy: RELATION)
+}
+
+type ActivityLogItem {
+  id: ID! @unique @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  time: DateTime!
+  message: String!
+  messageCode: ActivityMessageCode!
+  user: User! @relation(name: "LogItemActivity")
+  link: String
+}
+
+type MembershipLogItem {
+  id: ID! @unique @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  time: DateTime!
+  message: String!
+  messageCode: MembershipMessageCode!
+  user: User! @relation(name: "LogItemMember")
+  logger: User @relation(name: "LogItemLogger")
+}
+
+type RigImage {
+  id: ID! @unique @id
+  image: CloudinaryImage
+}
+
+type CloudinaryImage {
+  id: ID! @unique @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  publicId: String!
+  url: String
+  smallUrl: String
+}

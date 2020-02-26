@@ -1,0 +1,349 @@
+# import * from './generated/prisma.graphql'
+type SuccessMessage {
+  message: String
+}
+
+type SuccessTime {
+  time: DateTime
+}
+
+type Mutation {
+  signUp(
+    email: String!
+    password: String!
+    firstName: String!
+    lastName: String!
+    username: String!
+    gender: Gender!
+    birthdate: DateTime!
+  ): User!
+  login(username: String!, password: String!): User!
+  logout: SuccessMessage
+  requestReset(email: String!): SuccessMessage
+  resetPassword(
+    resetToken: String!
+    password: String!
+    confirmPassword: String!
+  ): User!
+  changePassword(password: String!, confirmPassword: String!): SuccessMessage
+  changeEmail(email: String!): SuccessMessage
+  updateRole(role: Role, userId: ID!): User
+  updateAccountType(accountType: AccountType, userId: ID!): User
+  updateAccountStatus(accountStatus: AccountStatus, userId: ID!): User
+  updateOffice(office: Office, userId: ID!): User
+  updateTitle(title: Title, userId: ID!): User
+  createEvent(event: UpsertEventInput!): SuccessMessage
+  updateEvent(id: ID!, event: UpsertEventInput!): SuccessMessage
+  setRSVP(rsvp: RSVPInput): SuccessMessage
+  sendMessage(
+    to: [String!]!
+    subject: String
+    htmlText: String!
+  ): SuccessMessage
+  updateUserProfileSettings(data: UserUpdateInput!, id: ID!): SuccessMessage
+  updateUserAdminProfileSettings(
+    data: UserAdminUpdateInput!
+    id: ID!
+  ): SuccessMessage
+  updateAvatar(data: ImageUpdateInput!): SuccessMessage
+  deleteAvatar(avatar: CloudinaryImageInput!): SuccessMessage
+  updateRig(data: ImageUpdateInput!): SuccessMessage
+  deleteRig(rig: CloudinaryImageInput!): SuccessMessage
+  updateVehicle(id: ID, vehicle: VehicleInput!): SuccessMessage
+  submitElection(election: ElectionInput!): Election
+  submitVote(vote: VoteInput): SuccessMessage
+  createTrail(trail: TrailInput): SuccessMessage
+  updateTrail(trail: TrailInput!, id: ID!): SuccessMessage
+}
+
+type Query {
+  myself: User
+  users(
+    role: [Role]
+    accountStatus: [AccountStatus]
+    accountType: [AccountType]
+    title: [Title]
+    office: [Office]
+    orderBy: [String]
+  ): [User]!
+  user(username: String): User!
+  getDuesLastReceived(username: String!): SuccessTime
+  getOfficer(office: Office!): User!
+  getMembers(accountTypes: [AccountType]): [User]!
+  getRunLeaders: [User]!
+  getMessageRecipients: [User]!
+  getUpcomingEvents(count: Int): [Event]!
+  # getMyUpcomingEvents: [Event]!
+  getUserEvents(username: String!, eventType: EventType): [Event]!
+  getPastEvents: [Event]!
+  getEvent(eventId: ID!): Event!
+  getNextEvent: Event
+  # getMyNextEvent: Event
+  getTrails: [Trail]!
+  getTrail(slug: String!): Trail
+  electionCandidates(
+    accountType: AccountType!
+    accountStatus: AccountStatus!
+  ): [User]!
+  getActiveElections: [Election]!
+  getActiveElectionsWithResults: [Election]!
+  getElection(id: ID!): Election!
+  getUserVote(ballot: ID): [Vote]!
+  getElections(startTime: DateTime, endTime: DateTime): [Election]!
+}
+
+type User {
+  id: ID
+  createdAt: DateTime!
+  joined: DateTime
+  lastLogin: DateTime
+  firstName: String
+  lastName: String
+  email: String
+  gender: Gender
+  birthdate: DateTime
+  username: String
+  preferences: Preference
+  userMeta: UserMeta
+  contactInfo: ContactInfo
+  avatar: CloudinaryImage
+  isCharterMember: Boolean!
+  title: Title
+  role: Role!
+  accountStatus: AccountStatus
+  accountType: AccountType
+  office: Office
+  rig: RigImage
+  # vehicles: [Vehicle]
+  vehicle: Vehicle
+  comfortLevel: String
+  activityLog: [ActivityLogItem]
+  membershipLog: [MembershipLogItem]
+  eventsRSVPd: [RSVP]
+  eventsLead: [Event]
+  trailsVisited: [Trail]
+  bandaids: [Bandaid]
+  runReportsLogged: [RunReport]
+}
+
+type ActivityLogItem {
+  id: ID!
+  time: DateTime!
+  message: String!
+  messageCode: ActivityMessageCode!
+  user: User!
+  event: Event
+}
+
+type MembershipLogItem {
+  id: ID!
+  time: DateTime!
+  message: String!
+  messageCode: MembershipMessageCode!
+  user: User!
+  logger: User
+}
+
+type Event {
+  id: ID!
+  type: EventType!
+  title: String!
+  creator: User!
+  description: String
+  featuredImage: CloudinaryImage
+  startTime: DateTime
+  endTime: DateTime
+  host: User
+  rsvps: [RSVP]
+  address: String
+  trailDifficulty: TrailDifficulty
+  trailNotes: String
+  rallyAddress: String
+  rallyTime: String
+  membersOnly: Boolean
+  trail: Trail
+  bandaids: [Bandaid]
+  runReports: [RunReport]
+}
+
+type RSVP {
+  member: User!
+  event: Event!
+  status: RSVPStatus!
+}
+
+type Trail {
+  id: ID!
+  slug: String!
+  name: String
+  description: String
+  featuredImage: CloudinaryImage
+  trailheadCoords: String
+  # coords: Coords
+  address: String
+  avgDifficulty: TrailDifficulty
+  avgRatings: Float
+  currentConditions: String
+  conditionsLastReported: DateTime
+  favoriteCount: Int
+  pastEvents: [Event]
+  visitors: [User]
+}
+
+type RunReport {
+  id: ID!
+  startTime: DateTime
+  endTime: DateTime
+  reportFiled: DateTime
+  reporter: User
+  title: String
+  description: String
+  trail: Trail
+  event: Event
+  weather: String
+  difficulty: TrailDifficulty
+  rating: Float
+  conditions: Condition
+  conditionsNotes: String
+  favorite: Boolean
+}
+
+type Bandaid {
+  id: ID!
+  occurred: DateTime
+  event: Event
+  memberInvolved: User
+  title: String
+  description: String
+}
+
+input RSVPInput {
+  userId: ID
+  eventId: ID
+  status: RSVPStatus
+}
+
+input UserUpdateInput {
+  firstName: String!
+  lastName: String!
+  username: String!
+  gender: String!
+  birthdate: DateTime!
+  joined: DateTime!
+  contactInfoId: ID!
+  street: String!
+  city: String!
+  state: String!
+  zip: String!
+  phone: String!
+  avatar: CloudinaryImageInput
+  preferencesId: ID!
+  emergencyContactName: String!
+  emergencyContactPhone: String!
+  showPhoneNumber: Boolean!
+}
+
+input UserAdminUpdateInput {
+  id: String
+  title: String
+  isCharterMember: Boolean!
+  office: String
+  role: String!
+  accountStatus: String!
+  accountType: String!
+}
+
+input UpsertEventInput {
+  title: String!
+  description: String
+  startTime: DateTime!
+  endTime: DateTime!
+  address: String
+  trailDifficulty: TrailDifficulty!
+  trailNotes: String
+  rallyAddress: String
+  rallyTime: DateTime
+  membersOnly: Boolean
+  host: String!
+  trail: String
+  featuredImage: String
+  newFeaturedImage: CloudinaryImageInput
+}
+
+input ElectionInput {
+  electionName: String!
+  startTime: String!
+  endTime: String!
+  races: [BallotInput!]!
+}
+
+input BallotInput {
+  id: String
+  title: String!
+  desc: String
+  candidates: [UserInput!]!
+  # votes: [Vote] @relation(name: "BallotVote")
+}
+
+input UserInput {
+  id: ID!
+}
+
+input VoteInput {
+  ballot: ID!
+  dateTime: DateTime!
+  candidate: ID
+}
+
+type Result {
+  candidate: User
+  count: Int!
+}
+
+type Ballot {
+  id: ID!
+  title: String!
+  desc: String
+  candidates: [User!]!
+  votes: [Vote]
+  results: [Result]
+}
+
+input ImageUpdateInput {
+  old: CloudinaryImageInput
+  new: CloudinaryImageInput!
+}
+
+input CloudinaryImageInput {
+  id: ID
+  publicId: String!
+  url: String!
+  smallUrl: String
+}
+
+type CloudinaryImage {
+  id: ID
+  publicId: String!
+  url: String!
+  smallUrl: String
+}
+
+input TrailInput {
+  name: String!
+  slug: String!
+  description: String
+  featuredImage: String
+  newFeaturedImage: CloudinaryImageInput
+  trailheadCoords: String
+  address: String
+}
+
+input VehicleInput {
+  year: Int
+  make: String!
+  model: String!
+  trim: String
+  name: String
+  outfitLevel: OutfitLevel
+  mods: [String]
+}
